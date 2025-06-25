@@ -14,7 +14,7 @@ class TaskPlanner:
         self.model = model  # Model
         self.client = OpenAI(api_key=api_key, base_url="https://api.chatanywhere.tech/v1")
         self.tasks = []          # Original task list
-
+        self.optimized_plan = [] # Optimized execution sequence
         self.resource_map = {}   # Resource timeline
         self.executed_tasks = [] # Record of executed tasks
         with open('available_examples_short.json', 'r') as f:
@@ -47,6 +47,24 @@ class TaskPlanner:
         :param instruction: Natural language instruction
         :return: Structured task list
         """
+        #sys_prompt = """You are an expert in correcting text, specializing in fixing homophone errors. The types of errors include:
+        #    Homophones with different tones; Homophones with the same tone.
+        #Requirements:
+        #    Correct only homophones that cause semantic inconsistency with the context.
+        #    Keep other content unchanged.
+        #    Output the sentence with only the erroneous homophones modified.
+        #    The number of characters in the output must match the original sentence."""
+        
+        #response = self.client.chat.completions.create(
+        #    model=self.model,
+        #    messages=[
+        #        {"role": "system", "content": sys_prompt},
+        #        {"role": "user", "content": instruction}
+        #    ],
+        #    temperature=0.3,
+        #)
+        #instruction = response.choices[0].message.content
+        #print("Corrected text:", instruction)
         example = self._select_most_similar_example(instruction)
         sys_prompt = """You are a professional task decomposition expert skilled in breaking down semantic tasks into core steps. When decomposing tasks, refer to the following example steps:"""+f"{example}"+"""
         Then decompose each core step into multiple independent atomic tasks (atomic task types can be: movement|dialogue|navigation|exploration|volume setting | LED setting |gesture). Each atomic task should be indivisible, considering task dependencies, priority levels, and resource requirements.
@@ -129,6 +147,171 @@ class TaskPlanner:
                 # Ensure correct type
                 task['duration'] = float(task['duration'])
         return self.tasks
+
+    def _preprocess_tasks(self):
+        """Task preprocessing: Build dependency graph"""
+        #self.dep_graph = {t['id']: set(t['depends']) for t in self.tasks}
+        self.dep_graph = {t['id']: set(t.get('depends', [])) for t in self.tasks}
+        self.task_dict = {t['id']: t for t in self.tasks}
+    def _heuristic(self, remaining: List[int]) -> float:
+        """Heuristic function: Estimate shortest time for remaining tasks"""
+        return sum(self.task_dict[tid].get('duration', 0) for tid in remaining)  # Add default value 0
+
+    def _validate_resources(self, task_id: int, resources: dict) -> bool:
+        """Resource conflict detection"""
+        task = self.task_dict[task_id]
+        # Modify this line, add empty list by default
+        for res in task.get('resources', []):  # <--- Key modification
+            if resources.get(res, 0) > 0:
+                return False
+        return True
+
+    def optimize_taskplan(self, tasks) -> List[Dict]:
+        """Perform A* algorithm optimization"""
+        open_heap = []
+        start_node = self.TaskNode(
+            task_id=None,
+            g=0,
+            h=self._heuristic([t['id'] for t in tasks]),
+            path=[],
+            resources={}
+        )
+        heapq.heappush(open_heap, start_node)
+        while open_heap:
+            current = heapq.heappop(open_heap)
+            if len(current.path) == len(tasks):
+                self.optimized_plan = [self.task_dict[tid] for tid in current.path]
+                return self.optimized_plan
+
+            # Generate successor nodes
+            for task in tasks:
+                if task['id'] in current.path:
+                    continue
+                if all(dep in current.path for dep in task.get('depends', [])):
+                    # Insert resource validation --------------------------------------------------
+                    if not self._validate_resources(task['id'], current.resources):
+                        continue  # Skip task due to resource conflict
+                    # ------------------------------------------------------------
+                    new_resources = current.resources.copy()
+                    valid = True
+                    # Simulate resource usage
+                    for res in task.get('resources', []):  # <--- Similarly modified
+                        if new_resources.get(res, 0) > 0:
+                            valid = False
+                            break
+                        new_resources[res] = task.get('duration', 0.0)  # Safe assignment                                           
+                    if valid:
+                        new_path = current.path + [task['id']]
+                        remaining = [t['id'] for t in tasks if t['id'] not in new_path]
+                        new_node = self.TaskNode(
+                            task_id=task['id'],
+                            g=current.g + task.get('duration', 0.0),  # Add default value
+                            h=self._heuristic(remaining),
+                            path=new_path,
+                            resources=new_resources
+                        )
+                        heapq.heappush(open_heap, new_node)
+
+        return tasks
+
+    def optimize_plan(self) -> List[Dict]:
+        """Perform A* algorithm optimization"""
+        open_heap = []
+        start_node = self.TaskNode(
+            task_id=None,
+            g=0,
+            h=self._heuristic([t['id'] for t in self.tasks]),
+            path=[],
+            resources={}
+        )
+        heapq.heappush(open_heap, start_node)
+
+        while open_heap:
+            current = heapq.heappop(open_heap)
+            
+            if len(current.path) == len(self.tasks):
+                self.optimized_plan = [self.task_dict[tid] for tid in current.path]
+                return self.optimized_plan
+
+            # Generate successor nodes
+            for task in self.tasks:
+                if task['id'] in current.path:
+                    continue
+                if all(dep in current.path for dep in task.get('depends', [])):           
+                    # Insert resource validation --------------------------------------------------
+                    if not self._validate_resources(task['id'], current.resources):
+                        continue  # Skip task due to resource conflict
+                    # ------------------------------------------------------------
+                    new_resources = current.resources.copy()
+                    valid = True
+                    
+                    # Simulate resource usage
+                    for res in task.get('resources', []):  # <--- Similarly modified
+                        if new_resources.get(res, 0) > 0:
+                            valid = False
+                            break
+                        new_resources[res] = task.get('duration', 0.0)  # Safe assignment            
+                    if valid:
+                        new_path = current.path + [task['id']]
+                        remaining = [t['id'] for t in self.tasks if t['id'] not in new_path]
+                        new_node = self.TaskNode(
+                            task_id=task['id'],
+                            g=current.g + task.get('duration', 0.0),  # Add default value
+                            h=self._heuristic(remaining),
+                            path=new_path,
+                            resources=new_resources
+                        )
+                        heapq.heappush(open_heap, new_node)
+
+        return tasks
+
+    def execute(self, max_retries: int = 3) -> Dict:
+        """
+        Execute the optimized task sequence
+        :param max_retries: Maximum number of retries
+        :return: Execution result report
+        """
+        report = {"success": [], "failed": []}
+        current_plan = self.optimized_plan.copy()
+        retry_count = 0
+
+        while current_plan and retry_count < max_retries:
+            task = current_plan[0]
+            try:
+                # Simulate task execution (should actually connect to executor interface)
+                print(f"Executing {task['name']}...")
+                self._update_resources(task, acquire=True)
+                
+                # Record successful task
+                report["success"].append(task)
+                self.executed_tasks.append(task['id'])
+                current_plan.pop(0)
+                retry_count = 0  # Reset retry counter
+            except Exception as e:
+                print(f"Task failed: {str(e)}")
+                report["failed"].append(task)
+                retry_count += 1
+                
+                if retry_count >= max_retries:
+                    print("Triggering replanning...")
+                    self._replan(current_plan)
+                    retry_count = 0
+
+        return report
+
+    def _update_resources(self, task: Dict, acquire: bool):
+        """Update resource usage status"""
+        factor = 1 if acquire else -1
+        for res in task['resources']:
+            self.resource_map[res] = self.resource_map.get(res, 0) + factor * task['duration']
+
+    def _replan(self, remaining_tasks: List[Dict]):
+        """Dynamic replanning"""
+        self.tasks = [t for t in self.tasks if t['id'] not in self.executed_tasks]
+        self._preprocess_tasks()
+        new_plan = self.optimize_plan()
+        remaining_tasks.clear()
+        remaining_tasks.extend(new_plan)
     def _select_most_similar_example(self, query_task: str) -> Tuple[str, List[str]]:
         # 1. Construct LLM semantic matching prompt
         prompt = self._build_semantic_match_prompt(query_task)

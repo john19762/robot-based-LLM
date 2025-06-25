@@ -1,0 +1,232 @@
+[
+  {
+    "pattern": "charging station",
+    "std": "charging_station",
+    "type": "location",
+    "params": {
+      "x": 5.2,
+      "y": 3.1,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "reception",
+    "std": "reception",
+    "type": "location",
+    "params": {
+      "x": 2.3,
+      "y": 4.7,
+      "theta": 1.57
+    }
+  },
+  {
+    "pattern": "门",
+    "std": "door",
+    "type": "location",
+    "params": {
+      "x": 1.3,
+      "y": 1.7,
+      "theta": 1.57
+    }
+  },
+  {
+    "pattern": "出口",
+    "std": "exit",
+    "type": "location",
+    "params": {
+      "x": 1.0,
+      "y": 2.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "食堂",
+    "std": "cafeteria",
+    "type": "location",
+    "params": {
+      "x": 3.0,
+      "y": 4.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "主入口",
+    "std": "main_entrance",
+    "type": "location",
+    "params": {
+      "x": 5.0,
+      "y": 6.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "洗手间",
+    "std": "restroom",
+    "type": "location",
+    "params": {
+      "x": 7.0,
+      "y": 8.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "会议室",
+    "std": "conference_room",
+    "type": "location",
+    "params": {
+      "x": 9.0,
+      "y": 10.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "自动贩卖机",
+    "std": "vending_machine",
+    "type": "location",
+    "params": {
+      "x": 11.0,
+      "y": 12.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "安全出口",
+    "std": "fire_exit",
+    "type": "location",
+    "params": {
+      "x": 13.0,
+      "y": 14.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "信息台",
+    "std": "info_desk",
+    "type": "location",
+    "params": {
+      "x": 15.0,
+      "y": 16.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "电梯",
+    "std": "elevator",
+    "type": "location",
+    "params": {
+      "x": 17.0,
+      "y": 18.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "公交车站",
+    "std": "bus_stop",
+    "type": "location",
+    "params": {
+      "x": 19.0,
+      "y": 20.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "停车场",
+    "std": "parking_lot",
+    "type": "location",
+    "params": {
+      "x": 21.0,
+      "y": 22.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "图书馆",
+    "std": "library",
+    "type": "location",
+    "params": {
+      "x": 23.0,
+      "y": 24.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "屋顶花园",
+    "std": "rooftop_garden",
+    "type": "location",
+    "params": {
+      "x": 25.0,
+      "y": 26.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "ATM",
+    "std": "atm",
+    "type": "location",
+    "params": {
+      "x": 27.0,
+      "y": 28.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "入口",
+    "std": "entrance",
+    "type": "location",
+    "params": {
+      "x": 29.0,
+      "y": 30.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "楼梯",
+    "std": "stairs",
+    "type": "location",
+    "params": {
+      "x": 31.0,
+      "y": 32.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "紧急出口",
+    "std": "emergency_exit",
+    "type": "location",
+    "params": {
+      "x": 33.0,
+      "y": 34.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "主大厅",
+    "std": "main_hall",
+    "type": "location",
+    "params": {
+      "x": 35.0,
+      "y": 36.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "招生办公室",
+    "std": "admissions_office",
+    "type": "location",
+    "params": {
+      "x": 37.0,
+      "y": 38.0,
+      "theta": 0.0
+    }
+  },
+  {
+    "pattern": "员工休息室",
+    "std": "staff_lounge",
+    "type": "location",
+    "params": {
+      "x": 39.0,
+      "y": 40.0,
+      "theta": 0.0
+    }
+  }
+]

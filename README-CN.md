@@ -58,7 +58,7 @@
 欢迎提交Pull Request或提交Issue以提出建议与改进！详细贡献指南请见CONTRIBUTING.md。
 
 ​ 联系方式
-    • 论文地址：Corresponding author: iauthor@gmail.com 
+    • 论文地址：Corresponding author: zhoulijun1976@126.com 
     • 项目主页： https://github.com/john19762/robot-based-LLM 
 
 ​ 许可证

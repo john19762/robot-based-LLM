@@ -1,0 +1,148 @@
+{
+  "graph": {
+    "nodes": [
+      {
+        "id": "start",
+        "type": "start",
+        "data": {
+          "variables": []
+        }
+      },
+      {
+        "id": "asr_simulator",
+        "type": "llm",
+        "data": {
+          "title": "语音识别模拟器",
+          "model": {
+            "name": "Qwen3-8B",
+            "temperature": 0.1
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是一个语音识别模拟器。将用户输入转换为标准指令。例如：'开下灯' → '开启照明'；'往前走点' → '向前移动50厘米'。只输出转换后指令。"
+            },
+            {
+              "role": "user",
+              "text": "{{#conversation.user_speech#}}"
+            }
+          ]
+        }
+      },
+      {
+        "id": "intent_classifier",
+        "type": "llm",
+        "data": {
+          "title": "意图分类器",
+          "model": {
+            "name": "Qwen3-8B",
+            "temperature": 0.1
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "判断指令意图。输出 JSON: {\"intent\": \"control_device|move_robot|grasp_object|unknown\", \"confidence\": 0.98}"
+            },
+            {
+              "role": "user",
+              "text": "指令: {{#node_outputs.asr_simulator#}}"
+            }
+          ]
+        }
+      },
+      {
+        "id": "router",
+        "type": "if-else",
+        "data": {}
+      },
+      {
+        "id": "plan_control_device",
+        "type": "assigner",
+        "data": {
+          "title": "生成设备控制任务",
+          "items": [
+            {
+              "variable_selector": ["robot_tasks", "0", "action"],
+              "value_selector": ["node_outputs", "asr_simulator"]
+            },
+            {
+              "variable_selector": ["robot_tasks", "0", "type"],
+              "value_selector": ["constant", "device_control"]
+            }
+          ]
+        }
+      },
+      {
+        "id": "plan_move",
+        "type": "assigner",
+        "data": {
+          "title": "生成移动任务",
+          "items": [
+            {
+              "variable_selector": ["robot_tasks", "0", "action"],
+              "value_selector": ["node_outputs", "asr_simulator"]
+            },
+            {
+              "variable_selector": ["robot_tasks", "0", "type"],
+              "value_selector": ["constant", "navigation"]
+            }
+          ]
+        }
+      },
+      {
+        "id": "execute_task",
+        "type": "llm",
+        "data": {
+          "title": "任务执行模拟器",
+          "model": {
+            "name": "Qwen3-8B",
+            "temperature": 0.1
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是一个机器人执行模拟器。根据任务描述，输出执行结果。例如：输入'开启照明' → 输出'✅ 照明已开启'。"
+            },
+            {
+              "role": "user",
+              "text": "执行任务: {{#robot_tasks.0.action#}}"
+            }
+          ]
+        }
+      },
+      {
+        "id": "unknown_handler",
+        "type": "llm",
+        "data": {
+          "title": "未知指令回复",
+          "model": {
+            "name": "Qwen3-8B",
+            "temperature": 0.7
+          },
+          "prompt_template": [
+            {
+              "role": "system",
+              "text": "你是一个友好的机器人助手。用户指令无法识别，请生成安慰性回复。"
+            },
+            {
+              "role": "user",
+              "text": "用户说: {{#conversation.user_speech#}}"
+            }
+          ]
+        }
+      }
+    ],
+    "edges": [
+      { "id": "e1", "source": "start", "target": "asr_simulator" },
+      { "id": "e2", "source": "asr_simulator", "target": "intent_classifier" },
+      { "id": "e3", "source": "intent_classifier", "target": "router" },
+      { "id": "e4", "source": "router", "target": "plan_control_device", "data": { "condition": "'control_device' in node_outputs.intent_classifier" } },
+      { "id": "e5", "source": "router", "target": "plan_move", "data": { "condition": "'move_robot' in node_outputs.intent_classifier" } },
+      { "id": "e6", "source": "router", "target": "unknown_handler", "data": { "condition": "'unknown' in node_outputs.intent_classifier" } },
+      { "id": "e7", "source": "plan_control_device", "target": "execute_task" },
+      { "id": "e8", "source": "plan_move", "target": "execute_task" },
+      { "id": "e9", "source": "execute_task", "target": "start" },
+      { "id": "e10", "source": "unknown_handler", "target": "start" }
+    ]
+  }
+}
